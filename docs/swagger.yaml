@@ -1,0 +1,177 @@
+basePath: /api/
+definitions:
+  models.Address:
+    properties:
+      city:
+        example: Москва
+        type: string
+      house:
+        example: "7"
+        type: string
+      lat:
+        example: "55.7579795"
+        type: string
+      lon:
+        example: "37.611263"
+        type: string
+      street:
+        example: Тверская
+        type: string
+    type: object
+  models.Credentials:
+    properties:
+      password:
+        example: password123
+        type: string
+      username:
+        example: user1
+        type: string
+    type: object
+  models.RequestAddressGeocode:
+    properties:
+      lat:
+        example: "55.7579795"
+        type: string
+      lng:
+        example: "37.611263"
+        type: string
+    type: object
+  models.RequestAddressSearch:
+    properties:
+      query:
+        example: Москва, Тверская 7
+        type: string
+    type: object
+  models.ResponseAddress:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/models.Address'
+        type: array
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Документация API для геосервиса, предоставляющего функции поиска адресов
+    и геокодирования.
+  title: Geoservise API
+  version: "1.0"
+paths:
+  /address/geocode:
+    post:
+      consumes:
+      - application/json
+      description: Принимает координаты (широту и долготу) и возвращает информацию
+        о соответствующем адресе.
+      parameters:
+      - description: Координаты для геокодирования
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RequestAddressGeocode'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешный ответ с данными об адресе
+          schema:
+            $ref: '#/definitions/models.ResponseAddress'
+        "400":
+          description: Некорректный запрос
+        "403":
+          description: Недопустимый токен
+        "500":
+          description: Ошибка сервера
+      security:
+      - BearerAuth: []
+      summary: Геокодирование координат
+      tags:
+      - address
+  /address/search:
+    post:
+      consumes:
+      - application/json
+      description: Выполняет поиск адресов по введённой строке, возвращает список
+        найденных адресов с координатами.
+      parameters:
+      - description: Запрос с текстом для поиска адреса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RequestAddressSearch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешный ответ с найденными адресами
+          schema:
+            $ref: '#/definitions/models.ResponseAddress'
+        "400":
+          description: Некорректный запрос
+        "403":
+          description: Недопустимый токен
+        "500":
+          description: Ошибка сервера
+      security:
+      - BearerAuth: []
+      summary: Поиск адресов
+      tags:
+      - address
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Проверяет логин и пароль, возвращает JWT-токен для доступа к защищённым
+        эндпоинтам.
+      parameters:
+      - description: Имя пользователя и пароль
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.Credentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пользователь не существует или пароль не совпадает
+        "400":
+          description: Некорректный запрос
+        "500":
+          description: Ошибка сервера
+      summary: Авторизация пользователя
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт нового пользователя с указанными логином и паролем.
+      parameters:
+      - description: Данные пользователя
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.Credentials'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Пользователь успешно зарегистрирован
+        "400":
+          description: Некорректный запрос или пользователь уже существует
+        "500":
+          description: Ошибка сервера
+      summary: Регистрация нового пользователя
+      tags:
+      - auth
+securityDefinitions:
+  BearerAuth:
+    description: 'Введите токен в формате: **Bearer {your_jwt_token}**'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
